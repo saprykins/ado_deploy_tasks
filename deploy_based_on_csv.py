@@ -1,15 +1,13 @@
 import pandas as pd
-
-
-
 import requests
 import json
 
-organization = "g*"
-project = "POD_Factory_v5"
+organization = "go*"
+project = "P*"
 workitemtype = "Task"
-area_path = "POD_Factory_v5"
-pat = "p6*"
+area_path = "P*"
+pat = "p*"
+parent_id = 0
 
 
 
@@ -42,19 +40,88 @@ def create_task(workitemtype, title):
     print(response)
 
     if response.status_code == 200:
-        # work_item_id = response.json()['fields']
-        print(response.json()['fields'])
-        # print(f"Work Item ID: {work_item_id}")
-        # print("Task work item created successfully.")
+        work_item_id = response.json()['id']
+        print(f"Work Item ID: {work_item_id}")
+        return work_item_id  # Return the work_item_id if successful
+
+    else:
+        print(f"Failed to create task work item. Status code: {response.status_code}")
+        print(response.text)
+        return None  # Return None if the creation fails
+
+
+def get_app_url(parent_id):   
+    '''
+    Get the link of the parent
+    '''
+
+    url = 'https://dev.azure.com/' + organization + '/_apis/wit/workItems/' + str(parent_id) + '?$expand=all'
+    
+    headers = {
+        "Content-Type": "application/json-patch+json"
+    }
+
+    response = requests.get(
+        url = url,
+        headers=headers,
+        auth=("", pat), 
+    )
+    # print(response)
+    lnk = response.json()["url"]
+    return lnk
+
+
+
+def create_child(workitemtype, title, parent_id):
+    # parent_id = 0
+    url = f"https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/${workitemtype}?api-version=7.0"
+    
+    headers = {
+        "Content-Type": "application/json-patch+json"
+    }
+
+    body = [
+        {
+            "op": "add",
+            "path": "/fields/System.Title",
+            "value": title  # Set the title to "test wi"
+        },
+        {
+            "op": "add",
+            "path": "/fields/System.Description",
+            "value": "This is a test work item created via API."  # Set the description
+        },
+        {
+            "op": "add",
+            "path": "/fields/System.Parent",
+            "value": parent_id  # Set the parent work item ID
+        }, 
+        {
+        "op": "add",
+        "path": "/relations/-",
+        "value": {
+            "rel":"System.LinkTypes.Hierarchy-Reverse",
+            "url":get_app_url(parent_id)
+            }
+        }
+    ]
+
+    response = requests.post(
+        url,
+        data=json.dumps(body),
+        headers=headers,
+        auth=("", pat)
+    )
+    print(response)
+
+    if response.status_code == 200:
+        work_item_id = response.json()['id']
+        print(f"Work Item ID: {work_item_id}")
+        print("parent ID is ", parent_id)
         
     else:
         print(f"Failed to create task work item. Status code: {response.status_code}")
         print(response.text)
-
-
-
-
-
 
 # Step 1: Read the CSV file into a Pandas DataFrame
 csv_file_path = 'apps.csv'  # Replace with the path to your CSV file
@@ -63,14 +130,23 @@ df = pd.read_csv(csv_file_path)
 # Group the DataFrame by the 'app' and 'env' columns
 grouped = df.groupby(['app', 'env'])
 
+
 # Iterate through each group and its corresponding VMs
 for (app, env), group_data in grouped:
     env_title = app + " - " + env
     env_workitemtype = 'user story'
-    create_task(env_workitemtype, env_title)
-    '''
+    parent_id = create_task(env_workitemtype, env_title)
+    
+    
     for vm in group_data['vm']:
         server_title = vm
         server_workitem = "server_wi"
-        create_task(server_workitem, server_title)
-    '''
+        create_child(server_workitem, server_title, parent_id)
+
+    
+    
+    
+    
+
+
+
