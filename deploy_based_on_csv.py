@@ -118,35 +118,38 @@ def create_child(workitemtype, title, parent_id):
         work_item_id = response.json()['id']
         print(f"Work Item ID: {work_item_id}")
         print("parent ID is ", parent_id)
+        return work_item_id
         
     else:
         print(f"Failed to create task work item. Status code: {response.status_code}")
         print(response.text)
+        return None
+
+# 
+# MAIN 
+#
 
 # Step 1: Read the CSV file into a Pandas DataFrame
 csv_file_path = 'apps.csv'  # Replace with the path to your CSV file
 df = pd.read_csv(csv_file_path)
 
 # Group the DataFrame by the 'app' and 'env' columns
+
+app_grouped = df.groupby(['app'])
 grouped = df.groupby(['app', 'env'])
-
-
 # Iterate through each group and its corresponding VMs
-for (app, env), group_data in grouped:
-    env_title = app + " - " + env
-    env_workitemtype = 'user story'
-    parent_id = create_task(env_workitemtype, env_title)
+for app, group_data in app_grouped: 
+    app_workitemtype = "epic"
+    app_title = app
+    parent_id = create_task(app_workitemtype, app_title)
     
-    
-    for vm in group_data['vm']:
-        server_title = vm
-        server_workitem = "server_wi"
-        create_child(server_workitem, server_title, parent_id)
-
-    
-    
-    
-    
-
-
-
+    for (app, env), group_data in grouped:    
+        if app == app_title:
+            env_title = app + " - " + env
+            env_workitemtype = 'user story'
+            parent_id2 = create_child(env_workitemtype, env_title, parent_id)
+        
+            for vm in group_data['vm']:
+                server_title = vm
+                server_workitem = "server_wi"
+                create_child(server_workitem, server_title, parent_id2)
