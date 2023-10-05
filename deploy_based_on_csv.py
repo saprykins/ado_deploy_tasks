@@ -119,7 +119,7 @@ def create_child(workitemtype, title, parent_id):
     if response.status_code == 200:
         work_item_id = response.json()['id']
         print(f"Work Item ID: {work_item_id}")
-        print("parent ID is ", parent_id)
+        # print("parent ID is ", parent_id)
         return work_item_id
         
     else:
@@ -192,7 +192,7 @@ def create_task(workitemtype, title, parent_id, tags, description, activity, pha
     if response.status_code == 200:
         work_item_id = response.json()['id']
         print(f"Work Item ID: {work_item_id}")
-        print("parent ID is ", parent_id)
+        # print("parent ID is ", parent_id)
         return work_item_id
         
     else:
@@ -216,8 +216,8 @@ tasks = pd.read_csv(tasks_csv_file_path)
 
 # Group the DataFrame by the 'app' and 'env' columns
 
-app_grouped = df.groupby(['app']) # iterate through applications
-grouped = df.groupby(['app', 'env']) # iterate through environments
+app_grouped = df.groupby(['App']) # iterate through applications
+grouped = df.groupby(['App', 'Environnement']) # iterate through environments
 
 task_workitem = "task"
 
@@ -235,7 +235,7 @@ for app, group_data in app_grouped:
             parent_id2 = create_child(env_workitemtype, env_title, parent_id)
         
             # Creating servers
-            for vm in group_data['vm']:
+            for vm in group_data['VM']:
                 server_title = vm
                 server_workitem = "server_wi"
                 create_child(server_workitem, server_title, parent_id2)
@@ -247,4 +247,3 @@ for app, group_data in app_grouped:
                 activity = row['activity']
                 phase = row['phase']
                 create_task(task_workitem, task_title, parent_id2, tags, description, activity, phase)
-
