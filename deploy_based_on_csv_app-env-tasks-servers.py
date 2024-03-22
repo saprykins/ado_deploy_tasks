@@ -19,6 +19,7 @@ pat = "n***"
 
 
 
+
 server_workitem = "source server"
 app_workitemtype = 'epic'
 env_workitemtype = 'feature'
@@ -146,7 +147,8 @@ def create_child(workitemtype, title, parent_id):
         return None
 
 
-def create_task(workitemtype, title, parent_id, tags, description, activity, phase):
+def create_task(workitemtype, title, parent_id, description):
+# def create_task(workitemtype, title, parent_id, tags, description, activity, phase):
     # parent_id = 0
     url = f"https://dev.azure.com/{organization}/{project}/_apis/wit/workitems/${workitemtype}?api-version=7.0"
     
@@ -170,11 +172,11 @@ def create_task(workitemtype, title, parent_id, tags, description, activity, pha
             "path": "/fields/System.Parent",
             "value": parent_id  # Set the parent work item ID
         },
-        {
-            "op": "add",
-            "path": "/fields/System.Tags",
-            "value": tags  # Set the title to "test wi"
-        },
+        #{
+        #    "op": "add",
+        #    "path": "/fields/System.Tags",
+        #    "value": tags  # Set the title to "test wi"
+        #},
         #{
         #    "op": "add",
         #    "path": "/fields/Custom.Mainactivity",
@@ -301,11 +303,12 @@ for app, group_data in app_grouped:
 
     for index, row in app_tasks.iterrows():
         task_title = row['task']     # Assuming 'tag' is the column with task titles
-        tags = row['tag']
+        # tags = row['tag']
         description = row['description']
-        activity = row['activity']
-        phase = row['phase']
-        create_task(task_workitem, task_title, parent_id, tags, description, activity, phase)
+        # activity = row['activity']
+        # phase = row['phase']
+        create_task(task_workitem, task_title, parent_id, description)
+        # create_task(task_workitem, task_title, parent_id, tags, description, activity, phase)
 
 
     for (app, env), group_data in grouped:
@@ -322,9 +325,10 @@ for app, group_data in app_grouped:
 
             for index, row in env_tasks.iterrows():
                 task_title = row['task']     # Assuming 'tag' is the column with task titles
-                tags = row['tag']
+                # tags = row['tag']
                 description = row['description']
-                activity = row['activity']
-                phase = row['phase']
-                create_task(task_workitem, task_title, parent_id2, tags, description, activity, phase)
+                # activity = row['activity']
+                # phase = row['phase']
+                create_task(task_workitem, task_title, parent_id2, description)
+                # create_task(task_workitem, task_title, parent_id2, tags, description, activity, phase)
         
